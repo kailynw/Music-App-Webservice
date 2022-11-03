@@ -1,5 +1,8 @@
 package com.restendpoints.musicapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,21 +17,21 @@ import javax.validation.constraints.NotNull;
 public class Song {
     @Id
     @GeneratedValue(strategy = IDENTITY)
-    @Getter
+    @Getter @Setter
     private Long songId;
-    @NotNull
     @Getter @Setter
     private String songName;
-    @Getter
-    @Setter
+    @Getter @Setter
+    private String description;
+    @Getter @Setter
     private String imageUriLocation;
     @Getter @Setter
     private String songUriLocation;
     @Getter @Setter
     private Long numberOfLikes;
-    @NotNull
     @Getter @Setter
     private String postedDate;
+    @JsonBackReference //Resolve Bidirectional Circular Dependency "songList"
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "userId")
     @Getter @Setter

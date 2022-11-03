@@ -9,6 +9,6 @@ import java.util.List;
 
 public interface SongRepository extends JpaRepository<Song, Long> {
 
-    List<Song> findSongByPostedUser(User postedUser);
-    Song findBySongByPostedUserAndSongId(User postedUser, Long songId);
+    List<Song> findSongsByPostedUser(User postedUser);
+    Song findSongByPostedUserAndSongId(User postedUser, Long songId);
 }

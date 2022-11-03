@@ -1,5 +1,9 @@
 package com.restendpoints.musicapp.entity;
 
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,14 +16,16 @@ import static javax.persistence.GenerationType.IDENTITY;
 import static javax.persistence.FetchType.LAZY;
 import static javax.persistence.CascadeType.ALL;
 
+//@JsonIdentityInfo(
+//        generator = ObjectIdGenerators.PropertyGenerator.class,
+//        property = "userId")
 @Entity
 @Table(name = "platform_user") // The table name "user" is prohibited in PostgresSQL
 public class User {
     @Id
     @GeneratedValue(strategy = IDENTITY)
-    @Getter
+    @Getter @Setter
     private Long userId;
-    @NotNull
     @Getter @Setter
     private String userName;
     @Getter @Setter
@@ -32,12 +38,14 @@ public class User {
     private String instagramUrl;
     @Getter @Setter
     private String createdDate;
-    @OneToMany(mappedBy = "postedByUser", fetch = LAZY, cascade = ALL)
-    @Getter
+    @JsonManagedReference //Resolve Bidirectional Circular Dependency with "postedUser"
+    @OneToMany(mappedBy = "postedUser", fetch = LAZY, cascade = ALL)
+    @Getter @Setter
     private List<Song> songList;
     @OneToMany(mappedBy = "followedUser", fetch = LAZY, cascade = ALL)
     @Getter
     private List<Follower> followerList;
+
     @OneToMany(mappedBy = "followerUser", fetch = LAZY, cascade = ALL)
     @Getter
     private List<Follower> followedList;
@@ -52,7 +60,7 @@ public class User {
                 ", bio='" + bio + '\'' +
                 ", instagramUrl='" + instagramUrl + '\'' +
                 ", createdDate=" + createdDate +
-                ", songList=" + songList +
+//                ", songList=" + songList +
                 ", followerList=" + followerList +
                 '}';
     }
