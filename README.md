@@ -1,2 +1,2 @@
 # Music-App-Webservice
-Soundcloud replica practice project
+Soundcloud replica webservice practice project
