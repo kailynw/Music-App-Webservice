@@ -6,10 +6,11 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.*;
 
 import static javax.persistence.GenerationType.IDENTITY;
 import static javax.persistence.FetchType.LAZY;
+
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 @Entity
@@ -30,23 +31,33 @@ public class Song {
     @Getter @Setter
     private Long numberOfLikes;
     @Getter @Setter
+    private Long numberOfViews;
+    @Getter @Setter
     private String postedDate;
+
     @JsonBackReference //Resolve Bidirectional Circular Dependency "songList"
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "userId")
     @Getter @Setter
     private User postedUser;
+
+    @Transient
+    @Getter @Setter
+    private String songPresignedUrl;
 
     @Override
     public String toString() {
         return "Song{" +
                 "songId=" + songId +
                 ", songName='" + songName + '\'' +
+                ", description='" + description + '\'' +
                 ", imageUriLocation='" + imageUriLocation + '\'' +
                 ", songUriLocation='" + songUriLocation + '\'' +
                 ", numberOfLikes=" + numberOfLikes +
-                ", postedDate=" + postedDate +
-                ", postedByUser=" + postedUser +
+                ", numberOfViews=" + numberOfViews +
+                ", postedDate='" + postedDate + '\'' +
+                ", postedUser=" + postedUser +
+                ", songPresignedUrl='" + songPresignedUrl + '\'' +
                 '}';
     }
 }

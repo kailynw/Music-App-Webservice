@@ -19,38 +19,38 @@ import java.util.List;
 import static javax.persistence.CascadeType.ALL;
 import static javax.persistence.FetchType.LAZY;
 import static javax.persistence.GenerationType.IDENTITY;
-
+@Getter
+@Setter
 public class UserResponseDTO {
 
-    @Getter @Setter
     private Long userId;
 
-    @Getter @Setter
     private String userName;
 
     @JsonInclude(Include.NON_EMPTY)
-    @Getter @Setter
     private Long numberOfFollowing;
 
     @JsonInclude(Include.NON_EMPTY)
-    @Getter @Setter
     private Long numberOfFollowers;
 
     @JsonInclude(Include.NON_EMPTY)
-    @Getter @Setter
     private String bio;
 
     @JsonInclude(Include.NON_EMPTY)
-    @Getter @Setter
     private String instagramUrl;
 
     @JsonInclude(Include.NON_EMPTY)
-    @Getter @Setter
+    private String profilePictureUrl;
+
+    @JsonInclude(Include.NON_EMPTY)
     private String createdDate;
+
+    private String email;
+
+    private Long numberOfLogins;
 
     @JsonProperty("songList")
     @JsonInclude(Include.NON_EMPTY)
-    @Getter @Setter
     private List<SongResponseDTO> songResponseDTOList;
 
 //    @Getter

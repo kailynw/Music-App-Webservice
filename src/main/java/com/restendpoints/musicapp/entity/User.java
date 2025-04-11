@@ -16,9 +16,6 @@ import static javax.persistence.GenerationType.IDENTITY;
 import static javax.persistence.FetchType.LAZY;
 import static javax.persistence.CascadeType.ALL;
 
-//@JsonIdentityInfo(
-//        generator = ObjectIdGenerators.PropertyGenerator.class,
-//        property = "userId")
 @Entity
 @Table(name = "platform_user") // The table name "user" is prohibited in PostgresSQL
 public class User {
@@ -37,9 +34,21 @@ public class User {
     @Getter @Setter
     private String instagramUrl;
     @Getter @Setter
+    private String profilePictureUrl;
+    @Getter @Setter
     private String createdDate;
+
+    @Getter @Setter
+    private String auth0UserId;
+
+    @Getter @Setter
+    private String email;
+
+    @Getter @Setter
+    private Long numberOfLogins; //Sign up is included as login attempt
+
     @JsonManagedReference //Resolve Bidirectional Circular Dependency with "postedUser"
-    @OneToMany(mappedBy = "postedUser", fetch = LAZY, cascade = ALL)
+    @OneToMany(mappedBy = "postedUser", fetch = LAZY, cascade = ALL, orphanRemoval = true)
     @Getter @Setter
     private List<Song> songList;
     @OneToMany(mappedBy = "followedUser", fetch = LAZY, cascade = ALL)

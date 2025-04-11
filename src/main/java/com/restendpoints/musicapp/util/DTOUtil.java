@@ -2,6 +2,7 @@ package com.restendpoints.musicapp.util;
 
 import com.restendpoints.musicapp.dto.song.SongRequestDTO;
 import com.restendpoints.musicapp.dto.song.SongResponseDTO;
+import com.restendpoints.musicapp.dto.song.SongViewsRequestDTO;
 import com.restendpoints.musicapp.dto.user.UserRequestDTO;
 import com.restendpoints.musicapp.dto.user.UserResponseDTO;
 import com.restendpoints.musicapp.entity.Song;
@@ -23,7 +24,9 @@ public class DTOUtil {
        songResponseDTO.setSongUriLocation(song.getSongUriLocation());
        songResponseDTO.setImageUriLocation(song.getImageUriLocation());
        songResponseDTO.setNumberOfLikes(song.getNumberOfLikes());
+       songResponseDTO.setNumberOfViews(song.getNumberOfViews());
        songResponseDTO.setPostedDate(song.getPostedDate());
+       songResponseDTO.setSongPresignedUrl(song.getSongPresignedUrl());
        songResponseDTO.setPostedUserResponseDTO(postedUserResponseDTO);
 
        return songResponseDTO;
@@ -42,7 +45,6 @@ public class DTOUtil {
 
       return songResponseDTO;
    }
-
 
    public static List<SongResponseDTO> toSongResponseDTOList(List<Song> songList){
        List<SongResponseDTO> songResponseDTOList = new ArrayList<>();
@@ -65,8 +67,14 @@ public class DTOUtil {
        return song;
     }
 
+   public static Song toSong(SongViewsRequestDTO songViewsRequestDTO){
+      Song song = new Song();
+      song.setNumberOfViews(songViewsRequestDTO.getNumberOfViews());
+      return song;
+   }
 
-    /*----- User Request and User Response DTO's -----*/
+
+   /*----- User Request and User Response DTO's -----*/
    public static UserResponseDTO toUserResponseDTO(User user){
       UserResponseDTO userResponseDTO = new UserResponseDTO();
       List<SongResponseDTO> songResponseDTOList = new ArrayList<>();
@@ -77,8 +85,10 @@ public class DTOUtil {
       userResponseDTO.setNumberOfFollowers(user.getNumberOfFollowers());
       userResponseDTO.setBio(user.getBio());
       userResponseDTO.setInstagramUrl(user.getInstagramUrl());
+      userResponseDTO.setProfilePictureUrl(user.getProfilePictureUrl());
       userResponseDTO.setCreatedDate(user.getCreatedDate());
-
+      userResponseDTO.setEmail(user.getEmail());
+      userResponseDTO.setNumberOfLogins(user.getNumberOfLogins());
       //Set songResponseDTOList in UserResponseDTO
       List<Song> songList = user.getSongList();
       if(songList!=null) {
@@ -118,6 +128,7 @@ public class DTOUtil {
       user.setUserName(userRequestDTO.getUserName());
       user.setBio(userRequestDTO.getBio());
       user.setInstagramUrl(userRequestDTO.getInstagramUrl());
+      user.setProfilePictureUrl(userRequestDTO.getProfilePictureUrl());
 
       return user;
    }

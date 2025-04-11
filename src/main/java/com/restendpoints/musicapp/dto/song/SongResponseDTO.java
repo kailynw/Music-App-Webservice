@@ -5,35 +5,32 @@ import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.restendpoints.musicapp.dto.user.UserResponseDTO;
-import com.restendpoints.musicapp.entity.User;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
+@Setter
 public class SongResponseDTO {
-    @Getter @Setter
+
+
     private Long songId;
 
-    @Getter @Setter
     private String songName;
-
-    @Getter @Setter
     private String description;
-
-    @Getter @Setter
     private String imageUriLocation;
-
-    @Getter @Setter
     private String songUriLocation;
 
-    @Getter @Setter
     private Long numberOfLikes;
 
-    @Getter @Setter
+    private Long numberOfViews;
+
     private String postedDate;
+
+    private String songPresignedUrl;
+
 
     @JsonProperty("postedUser")
     @JsonInclude(Include.NON_EMPTY)
-    @Getter @Setter
     private UserResponseDTO postedUserResponseDTO;
 
     @Override
@@ -41,12 +38,14 @@ public class SongResponseDTO {
         return "SongResponseDTO{" +
                 "songId=" + songId +
                 ", songName='" + songName + '\'' +
+                ", description='" + description + '\'' +
                 ", imageUriLocation='" + imageUriLocation + '\'' +
                 ", songUriLocation='" + songUriLocation + '\'' +
                 ", numberOfLikes=" + numberOfLikes +
-                ", postedDate=" + postedDate +
-                ", postedByUser=" + postedUserResponseDTO +
+                ", numberOfViews=" + numberOfViews +
+                ", postedDate='" + postedDate + '\'' +
+                ", songPresignedUrl='" + songPresignedUrl + '\'' +
+                ", postedUserResponseDTO=" + postedUserResponseDTO +
                 '}';
     }
-
 }

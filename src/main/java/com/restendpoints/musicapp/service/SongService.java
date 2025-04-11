@@ -3,6 +3,7 @@ package com.restendpoints.musicapp.service;
 import com.restendpoints.musicapp.constants.Constants;
 import com.restendpoints.musicapp.dto.song.SongRequestDTO;
 import com.restendpoints.musicapp.dto.song.SongResponseDTO;
+import com.restendpoints.musicapp.dto.song.SongViewsRequestDTO;
 import com.restendpoints.musicapp.entity.Song;
 import com.restendpoints.musicapp.entity.User;
 import com.restendpoints.musicapp.repository.SongRepository;
@@ -30,26 +31,32 @@ public class SongService {
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    ImageRetrievalService imageRetrievalService;
+
+    @Autowired
+    S3Service s3Service;
+
     public List<SongResponseDTO> getSongs(){
         List<Song> songList = songRepository.findAll();
         logger.info("Retrieved all songs: {}", songList);
         return DTOUtil.toSongResponseDTOList(songList);
     }
 
-    public SongResponseDTO getSong(Long songId){
+    public Song getSong(Long songId){
         Optional<Song> song = songRepository.findById(songId);
         boolean songExists = song.isPresent();
 
         if(songExists){
             logger.info("Retrieved song: {}",song);
-            return DTOUtil.toSongResponseDTO(song.get());
+            return song.get();
         }else {
             logger.warn("Song does not exist...");
             return null;
         }
     }
 
-    public SongResponseDTO createSong(SongRequestDTO songRequestDTO, Long userId){
+    public Song createSong(SongRequestDTO songRequestDTO, Long userId){
         Song song = DTOUtil.toSong(songRequestDTO);
 
         Optional<User> potentialUser = userRepository.findById(userId);
@@ -67,21 +74,27 @@ public class SongService {
             //Set song number of likes
             song.setNumberOfLikes(Constants.ZERO);
 
+            //Set song views
+            song.setNumberOfViews(Constants.ZERO);
+
+            //Set random image
+            song.setImageUriLocation(imageRetrievalService.retrieveRandomImageUrl());
+
             //Create song
             Song createdSong = songRepository.save(song);
             logger.info("Song created: {}", createdSong);
-            return DTOUtil.toSongResponseDTO(createdSong);
+            return createdSong;
         }else{
             logger.error("User doesn't exist | Potential user id: {}", userId);
             return null;
         }
     }
 
-    public SongResponseDTO updateSong(SongRequestDTO songRequestDTO, Long userId, Long songId){
-        Song song = DTOUtil.toSong(songRequestDTO);
-        song.setSongId(songId);
+    public Song updateSong(SongRequestDTO songRequestDTO, Long userId, Long songId){
+        Song songUpdate = DTOUtil.toSong(songRequestDTO);
+        songUpdate.setSongId(songId);
 
-        Long potentialSongId = song.getSongId();
+        Long potentialSongId = songUpdate.getSongId();
         Optional<Song> potentialSong = songRepository.findById(potentialSongId);
         boolean songExists = potentialSong.isPresent();
 
@@ -90,8 +103,8 @@ public class SongService {
             boolean userPostedSong = existingSong.getPostedUser().getUserId().equals(userId);
 
             if (userPostedSong) {
-                Song updatedSong = this.handleSongUpdate(song, existingSong);
-                return DTOUtil.toSongResponseDTO(updatedSong);
+                Song updatedSong = this.handleSongUpdate(songUpdate, existingSong);
+                return updatedSong;
             } else {
                 logger.error("Could not update song. User is not original poster");
                 return null;
@@ -102,21 +115,36 @@ public class SongService {
         }
     }
 
-    public List<SongResponseDTO> getSongsByUserId(Long userId) {
+    public Song updateSongViews(SongViewsRequestDTO songViewsRequestDTO, Long userId, Long songId){
+        Song songUpdate = DTOUtil.toSong(songViewsRequestDTO);
+        Song existingSong = this.getSongByUserIdAndSongId(userId, songId);
+
+        //Song exists
+        if(existingSong!=null){
+            Song updatedSong = this.handleSongUpdate(songUpdate, existingSong);
+            return updatedSong;
+        }
+        else{
+            return null;
+        }
+    }
+
+    public List<Song> getSongsByUserId(Long userId) {
         Optional<User> potentialUser = userRepository.findById(userId);
         boolean userExists = potentialUser.isPresent();
 
         if (userExists) {
             User postedUser = potentialUser.get();
             List<Song> songListByUserId= songRepository.findSongsByPostedUser(postedUser);
-            return DTOUtil.toSongResponseDTOList(songListByUserId);
+            updateSongListWithPresignedUrls(songListByUserId);
+            return songListByUserId;
         } else{
             logger.error("User doesn't exist. Could not get songs posted by user | User id: {}", userId);
             return null;
         }
     }
 
-    public SongResponseDTO getSongByUserIdAndSongId(Long userId, Long songId) {
+    public Song getSongByUserIdAndSongId(Long userId, Long songId) {
         boolean songExists = songRepository.existsById(songId);
         Optional<User> potentialUser = userRepository.findById(userId);
         boolean userExists = potentialUser.isPresent();
@@ -124,10 +152,25 @@ public class SongService {
         if (songExists && userExists) {
             User postedUser = potentialUser.get();
             Song songByUserId = songRepository.findSongByPostedUserAndSongId(postedUser, songId);
-            return DTOUtil.toSongResponseDTO(songByUserId);
+            return songByUserId;
         } else{
             logger.error("User doesn't exist or Song doesn't exist" +
                     " | User id: {} | Song id: {}", userId, songId);
+            return null;
+        }
+    }
+
+    public Song getSongPresignedUrl(Long songId){
+        Optional<Song> potentialSong = songRepository.findById(songId);
+
+        if (potentialSong.isPresent()){
+            Song song = potentialSong.get();
+            String presignedSongUrl = s3Service.getPresignedUrl(song.getSongUriLocation());
+            song.setSongUriLocation(presignedSongUrl);
+            logger.info(presignedSongUrl);
+            return song;
+        }else{
+            logger.error("Song doesn't exist: {}", songId);
             return null;
         }
     }
@@ -137,6 +180,7 @@ public class SongService {
         String description = songUpdate.getDescription();
         String imageUriLocation = songUpdate.getImageUriLocation();
         String songUriLocation = songUpdate.getSongUriLocation();
+        Long numberOfViews = songUpdate.getNumberOfViews();
 
         if (ValidationUtil.isUpdatable(existingSong.getSongName(), songName)){
             logger.info("Song id: {} | Updating song name: {} -> {}", existingSong.getSongId(), existingSong.getSongName(), songName);
@@ -154,12 +198,27 @@ public class SongService {
         }
 
         if (ValidationUtil.isUpdatable(existingSong.getSongUriLocation(), songUriLocation)){
-            logger.info("Song id: {} | Updating song song URI location: {} -> {}", existingSong.getSongId(), existingSong.getSongUriLocation(), songUriLocation);
+            logger.info("Song id: {} | Updating song URI location: {} -> {}", existingSong.getSongId(), existingSong.getSongUriLocation(), songUriLocation);
             existingSong.setSongUriLocation(songUriLocation);
+        }
+
+        if(ValidationUtil.isUpdatableAscendingOnly(existingSong.getNumberOfViews(), numberOfViews)){
+            logger.info("Song id: {} | Updating song views: {} -> {}", existingSong.getSongId(), existingSong.getNumberOfViews(), numberOfViews);
+            existingSong.setNumberOfViews(numberOfViews);
         }
 
         Song updatedSong = songRepository.save(existingSong);
         logger.info("Updated song: {}", updatedSong);
         return updatedSong;
     }
+
+    private void updateSongListWithPresignedUrls(List<Song> songList){
+        for (Song song: songList) {
+            if (StringUtils.isNotEmpty(song.getImageUriLocation())) {
+                String presignedUrl = s3Service.getPresignedUrl(song.getSongUriLocation());
+                song.setSongPresignedUrl(presignedUrl);
+            }
+        }
+    }
+
 }
